@@ -95,16 +95,29 @@
       cursor: pointer;
     }
 
-    .login:disabled {
-      cursor: not-allowed;
-      opacity: 0.65;
-    }
+    .login:hover { opacity: 0.9; }
 
     .note {
       margin-top: 16px;
       color: var(--muted);
       font-size: 12px;
       line-height: 1.6;
+    }
+
+    .account {
+      display: none;
+      margin-top: 20px;
+      padding: 16px;
+      background: #1727460a;
+      border-radius: 12px;
+      line-height: 1.7;
+      overflow-wrap: anywhere;
+    }
+
+    .logout {
+      background: transparent;
+      color: var(--navy);
+      border: 1px solid #17274640;
     }
 
     footer {
@@ -118,7 +131,7 @@
 <body>
   <header>
     <div class="brand">AIRBOUND / MODERATION</div>
-    <div class="status">Account dashboard</div>
+    <div class="status" id="status">Checking account…</div>
   </header>
 
   <main>
@@ -130,19 +143,102 @@
     </p>
 
     <section class="panel">
-      <h2>Get started</h2>
-      <p>Connect your Discord account to begin setting up your dashboard.</p>
-      <button class="login" disabled>
-        Discord sign-in — coming soon
+      <h2 id="panel-title">Get started</h2>
+      <p id="panel-description">
+        Connect your Discord account to begin setting up your dashboard.
+      </p>
+
+      <button class="login" id="login-button">
+        Continue with Discord
       </button>
-      <p class="note">
-        Authentication is not connected yet. This page is a design
-        prototype and does not sign you in or store account information.
+
+      <div class="account" id="account">
+        <strong>Discord account connected</strong>
+        <div id="username"></div>
+        <div id="discord-id"></div>
+      </div>
+
+      <button class="login logout" id="logout-button" hidden>
+        Sign out
+      </button>
+
+      <p class="note" id="note">
+        Sign in securely with Discord. Airbound Moderation will not ask
+        for your Discord password.
       </p>
     </section>
   </main>
 
   <footer>Airbound Moderation · Community tools.</footer>
+
+  <script>
+    const API = "https://airbound-api.rudolf-hallika.workers.dev";
+
+    const status = document.getElementById("status");
+    const title = document.getElementById("panel-title");
+    const description = document.getElementById("panel-description");
+    const loginButton = document.getElementById("login-button");
+    const account = document.getElementById("account");
+    const username = document.getElementById("username");
+    const discordId = document.getElementById("discord-id");
+    const logoutButton = document.getElementById("logout-button");
+    const note = document.getElementById("note");
+
+    loginButton.addEventListener("click", () => {
+      window.location.href = API + "/auth/discord";
+    });
+
+    async function checkLogin() {
+      try {
+        const response = await fetch(API + "/api/me", {
+          credentials: "include"
+        });
+
+        if (!response.ok) {
+          showLoggedOut();
+          return;
+        }
+
+        const data = await response.json();
+
+        if (!data.loggedIn || !data.discord) {
+          showLoggedOut();
+          return;
+        }
+
+        status.textContent = "Discord connected";
+        title.textContent = "Welcome back!";
+        description.textContent = "Your Discord account is connected.";
+        username.textContent = "Username: " + data.discord.username;
+        discordId.textContent = "Discord ID: " + data.discord.id;
+        account.style.display = "block";
+        loginButton.hidden = true;
+        logoutButton.hidden = false;
+        note.textContent = "Your account is connected to Airbound Moderation.";
+      } catch {
+        status.textContent = "Connection unavailable";
+        note.textContent =
+          "Could not contact the API. Please try refreshing this page.";
+      }
+    }
+
+    function showLoggedOut() {
+      status.textContent = "Not signed in";
+      title.textContent = "Get started";
+      description.textContent =
+        "Connect your Discord account to begin setting up your dashboard.";
+      account.style.display = "none";
+      loginButton.hidden = false;
+      logoutButton.hidden = true;
+    }
+
+    logoutButton.addEventListener("click", async () => {
+      note.textContent =
+        "Sign-out is not implemented on the server yet.";
+    });
+
+    checkLogin();
+  </script>
 </body>
 </html>
 
