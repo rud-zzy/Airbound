@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -172,8 +172,6 @@
   <footer>Airbound Moderation · Community tools.</footer>
 
   <script>
-    const API = "https://airbound-api.rudolf-hallika.workers.dev";
-
     const status = document.getElementById("status");
     const title = document.getElementById("panel-title");
     const description = document.getElementById("panel-description");
@@ -185,13 +183,14 @@
     const note = document.getElementById("note");
 
     loginButton.addEventListener("click", () => {
-      window.location.href = API + "/auth/discord";
+      window.location.href = "/auth/discord";
     });
 
     async function checkLogin() {
       try {
-        const response = await fetch(API + "/api/me", {
-          credentials: "include"
+        const response = await fetch("/api/me", {
+          credentials: "same-origin",
+          cache: "no-store"
         });
 
         if (!response.ok) {
@@ -215,10 +214,11 @@
         loginButton.hidden = true;
         logoutButton.hidden = false;
         note.textContent = "Your account is connected to Airbound Moderation.";
-      } catch {
+      } catch (error) {
         status.textContent = "Connection unavailable";
         note.textContent =
           "Could not contact the API. Please try refreshing this page.";
+        console.error("Airbound login check failed:", error);
       }
     }
 
@@ -241,4 +241,4 @@
   </script>
 </body>
 </html>
-
+```
